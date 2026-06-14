@@ -1,66 +1,70 @@
-# 🛡️ Guia de Segurança e Gestão de Usuários no Google Workspace
 
-Este repositório contém a documentação de referência, boas práticas e diretrizes de configuração para a governança de identidades, gerenciamento de acessos e proteção de dados no ambiente corporativo do **Google Workspace** via **Google Admin Console**.
+### 1. Gestão de Usuários e Acessos
 
----
+A base da segurança começa em saber quem tem acesso a quê. O Google Workspace oferece ferramentas flexíveis para organizar sua estrutura:
 
-## 📌 Sumário
-1. [Gestão de Usuários e Acessos](#1-gestão-de-usuários-e-acessos)
-2. [Segurança de Contas e Autenticação](#2-segurança-de-contas-e-autenticação)
-3. [Segurança de Dados e Governança (Google Drive)](#3-segurança-de-dados-e-governança-google-drive)
-4. [Segurança e Proteção de E-mail (Gmail & DNS)](#4-segurança-e-proteção-de-e-mail-gmail--dns)
-5. [Gestão de Dispositivos (MDM)](#5-gestão-de-dispositivos-mdm---mobile-device-management)
-6. [Auditoria, Relatórios e Monitoramento](#6-auditoria-relatórios-e-monitoramento)
-7. [🚀 Plano de Implementação: Por Onde Começar?](#-plano-de-implementação-por-onde-começar)
+* **Unidades Organizacionais (OUs):** Não trate todos os usuários da mesma forma. Crie OUs (ex: Diretoria, Financeiro, Marketing, Estagiários) para aplicar políticas de segurança e permissões de aplicativos diferentes para cada grupo.
+* **Ciclo de Vida do Usuário:**
+* **Ativação:** Use o provisionamento correto (manual, via planilha CSV ou sincronizado com um diretório como o Azure AD/Active Directory através do Google Cloud Directory Sync).
+* **Desativação (Offboarding):** Quando um funcionário sair, suspenda a conta imediatamente, transfira a propriedade dos arquivos do Google Drive e os eventos do Google Agenda para um gestor antes de excluir definitivamente o usuário.
+
+
+* **Princípio do Menor Privilégio:** Evite dar acesso de "Administrador Super" para muitas pessoas. Use as **Funções de Administrador Pré-definidas** (como Administrador do Help Desk, Administrador de Usuários) ou crie funções personalizadas para limitar o poder de cada técnico.
 
 ---
 
-## 1. Gestão de Usuários e Acessos
+### 2. Segurança de Contas e Autenticação
 
-A base da segurança começa pelo controle estrito de identidades e permissões, garantindo que cada usuário acesse apenas o necessário para sua função.
+Proteger a identidade dos usuários é o passo mais crítico contra invasões.
 
-*   **Unidades Organizacionais (OUs):** Estruturação do ecossistema dividindo os usuários em grupos lógicos (ex: *Diretoria, Financeiro, Marketing, Estagiários*). Isso permite aplicar políticas de segurança e restrições de aplicativos de forma granular.
-*   **Ciclo de Vida do Usuário (Onboarding & Offboarding):**
-    *   *Ativação:* Provisionamento automatizado e seguro via planilhas CSV, API ou sincronização direta com diretórios externos (como Azure AD/Active Directory via *Google Cloud Directory Sync*).
-    *   *Desativação:* Em processos de desligamento, suspensão imediata da conta, revogação de tokens de login e transferência compulsória da propriedade de arquivos do Drive e eventos de Agenda para um gestor antes da exclusão definitiva.
-*   **Princípio do Menor Privilégio:** Mitigação do uso de contas de "Administrador Super". Distribuição de acessos baseada em **Funções de Administrador Pré-definidas** (Help Desk, Administrador de Usuários) ou funções personalizadas e restritas.
+* **Verificação em Duas Etapas (2SV / MFA):** **Obrigatória para todos.** Ative a exigência de 2SV no painel. Para maior segurança, incentive ou exija o uso do aplicativo Google Authenticator, chaves de segurança físicas (FIDO2) ou solicitações do Google no celular, evitando SMS (que é vulnerável a clonagem).
+* **Controle de Força de Senha:** Defina um comprimento mínimo para as senhas (pelo menos 8 a 12 caracteres) e proíba a reutilização de senhas antigas.
+* **Single Sign-On (SSO):** Se a sua empresa já usa outro provedor de identidade (como Microsoft Entra ID ou Okta), você pode integrar o Google Workspace via SAML para que os usuários usem a mesma senha corporativa.
 
 ---
 
-## 2. Segurança de Contas e Autenticação
+### 3. Segurança de Dados (Google Drive e Compartilhamento)
 
-Garantir a integridade do perímetro de identidade é a barreira mais crítica contra vetores modernos de ataque.
+O vazamento de informações confidenciais costuma acontecer no compartilhamento de arquivos.
 
-*   **Verificação em Duas Etapas (2SV / MFA):** Imposição obrigatória de múltiplos fatores de autenticação.
-    
-    | Método de Validação | Nível de Segurança | Descrição |
-    | :--- | :--- | :--- |
-    | **Chaves Físicas (FIDO2/Yubikey)** | 🔴 Máximo | Proteção total contra engenharia reversa e *phishing* direcionado. |
-    | **Prompt do Google** | 🟡 Alto | Notificação nativa em tela ("É você tentando logar?"). |
-    | **Aplicativos MFA (Authenticator)** | 🟡 Alto | Códigos temporários baseados em tempo (TOTP) atualizados a cada 30s. |
-    | **SMS / Ligação** | 🟢 Baixo | Vulnerável a ataques de engenharia social e clonagem de chip (*SIM Swap*). Deve ser evitado. |
+* **Políticas de Compartilhamento Externo:** No painel do Drive, defina se os usuários podem compartilhar arquivos com pessoas fora da organização. Você pode:
+* Bloquear totalmente o compartilhamento externo para setores sensíveis.
+* Permitir apenas para domínios confiáveis (Lista Branca).
+* Exibir um aviso antes de compartilhar externamente.
 
-*   **Controle de Força de Senha:** Definição de políticas complexas com comprimento mínimo (8 a 12 caracteres), exigência de caracteres especiais e bloqueio de reutilização de senhas históricas.
-*   **Single Sign-On (SSO):** Integração com provedores de identidade externos (IdP) como Microsoft Entra ID ou Okta via protocolo **SAML**, unificando as credenciais corporativas.
+
+* **Prevenção de Perda de Dados (DLP):** *(Disponível nos planos Enterprise)* Crie regras automáticas para escanear arquivos e e-mails. Por exemplo, se um usuário tentar enviar um arquivo que contenha números de CPF, cartões de crédito ou palavras-chave como "Confidencial", o sistema pode bloquear o compartilhamento ou notificar o administrador.
+* **Drives Compartilhados:** Incentive o uso de Drives Compartilhados (em vez do "Meu Drive" individual) para projetos de equipe. Isso garante que os arquivos pertençam à empresa, e não ao funcionário, evitando perda de dados em desligamentos.
 
 ---
 
-## 3. Segurança de Dados e Governança (Google Drive)
+### 4. Segurança de E-mail (Gmail)
 
-Políticas voltadas para mitigar o vazamento acidental ou malicioso de informações proprietárias.
+O e-mail é a principal porta de entrada para ataques de Phishing e Ransomware.
 
-*   **Políticas de Compartilhamento Externo:** Configuração restritiva do escopo de compartilhamento de arquivos para fora da organização:
-    *   *Bloqueio Total:* Restringe o ecossistema de arquivos estritamente ao domínio interno (recomendado para OUs como RH e Financeiro).
-    *   *Lista Branca (Domínios Confiáveis):* Permite colaboração externa apenas com domínios de parceiros homologados e auditados.
-    *   *Restrição de Links:* Desativação do modo "Qualquer pessoa com o link", obrigando o compartilhamento nominal via e-mail direto.
-*   **Prevenção de Perda de Dados (DLP):** *(Disponível nos planos Enterprise)* Criação de regras automatizadas e varreduras baseadas em regex para detectar dados sensíveis (CPFs, Cartões de Crédito, credenciais) em arquivos e e-mails, bloqueando o envio ou alertando a equipe de segurança.
-*   **Drives Compartilhados:** Migração do modelo "Meu Drive" para estruturas de Drives Compartilhados, garantindo que a propriedade intelectual pertença à instituição e eliminando a perda de arquivos após o *offboarding* de colaboradores.
+* **Proteção Avançada contra Phishing e Malware:** Ative as configurações do Gmail para anexos e links suspeitos. O Google pode colocar e-mails em quarentena ou exibir alertas vermelhos gritantes para os usuários antes que eles cliquem em links maliciosos.
+* **Autenticação de E-mail (Crucial para não irem para o Spam):** Configure corretamente na sua zona de DNS:
+* **SPF (Sender Policy Framework):** Especifica quais servidores podem enviar e-mails em nome do seu domínio.
+* **DKIM (DomainKeys Identified Mail):** Adiciona uma assinatura criptográfica aos e-mails, garantindo que eles não foram alterados no caminho.
+* **DMARC:** Define o que o destinatário deve fazer se o e-mail falhar no SPF ou DKIM (rejeitar ou enviar para a quarentena).
+
+
 
 ---
 
-## 4. Segurança e Proteção de E-mail (Gmail & DNS)
+### 5. Gestão de Dispositivos (MDM - Mobile Device Management)
 
-Configurações técnicas para blindar o fluxo de mensagens contra espionagem, phishing e técnicas de falsificação de identidade (*spoofing*).
+Seus usuários acessam os dados da empresa por celulares e notebooks pessoais ou corporativos.
 
-### Camada de Autenticação DNS (Tríade Essencial)
-Para garantir que o e-mail corporativo não seja rejeitado ou caia na caixa de spam de terceiros, os seguintes apontamentos devem ser configurados na zona de DNS do domínio:
+* **Gerenciamento de Dispositivos Básicos ou Avançados:** * Exija bloqueio de tela (PIN/Senha) nos celulares que sincronizam o e-mail da empresa.
+* **Limpeza Remota:** Em caso de perda ou roubo do aparelho, o administrador pode apagar apenas os dados corporativos do celular do funcionário (sem mexer nas fotos pessoais dele) ou apagar o dispositivo inteiro se for um bem da empresa.
+
+
+* **Acesso Contextual (Context-Aware Access):** *(Planos Enterprise)* Permita que os usuários acessem o Workspace apenas se cumprirem requisitos específicos, como: estar usando um IP da empresa (VPN), estar em um país específico ou usando um computador criptografado e atualizado.
+
+---
+
+### 6. Auditoria, Relatórios e Monitoramento
+
+* **Central de Alertas:** Monitore o painel de alertas para atividades suspeitas, como logins em países incomuns, concessão de privilégios de administrador ou downloads em massa de arquivos do Drive.
+* **Registro de Auditoria:** Use o *Log de Auditoria do Administrador* para rastrear qualquer alteração feita nas configurações de segurança e os *Logs do Drive* para saber quem visualizou, baixou ou excluiu documentos importantes.
